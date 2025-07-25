@@ -44,6 +44,10 @@ jobs:
           pdm run ruff format --check
           pdm run ruff check
           pdm run mypy .
+      - name: Build dist
+        run: |
+          pdm build
+          pdm run twine check dist/*
 
   lint_by_poetry:
     runs-on: ubuntu-latest
@@ -66,6 +70,10 @@ jobs:
           poetry run ruff format --check
           poetry run ruff check
           poetry run mypy .
+      - name: Build dist
+        run: |
+          poetry build --clean
+          poetry run twine check dist/*
 
   no_tool:
     runs-on: ubuntu-latest
@@ -83,3 +91,30 @@ jobs:
           .venv/bin/ruff format --check
           .venv/bin/ruff check
           .venv/bin/mypy .
+      - name: Build dist
+        run: |
+          .venv/bin/pip install --upgrade build
+          .venv/bin/python -m build
+          .venv/bin/twine check dist/*
+
+  requirements.txt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r pyproject.toml --group dev
+          pip install -e .
+      - name: Lint and check
+        run: |
+          ruff format --check
+          ruff check
+          mypy .
+      - name: Build dist
+        run: |
+          pip install --upgrade build
+          python -m build
+          twine check dist/*
