@@ -87,9 +87,7 @@ class Subdoc(object):
         xml = re.sub(
             r"</?w:body[^>]*>",
             "",
-            etree.tostring(
-                self.subdocx.element.body, encoding="unicode", pretty_print=False
-            ),
+            etree.tostring(self.subdocx.element.body, encoding="unicode", pretty_print=False),
         )
         return xml
 

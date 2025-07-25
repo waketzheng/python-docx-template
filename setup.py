@@ -28,9 +28,7 @@ long_description = """
 News
 ====
 %(CHANGES)s
-""" % read(
-    "README", "CHANGES"
-)
+""" % read("README", "CHANGES")
 
 
 def get_version(pkg):

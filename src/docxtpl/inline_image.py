@@ -73,15 +73,10 @@ class InlineImage(object):
         if self.anchor:
             run = parse_xml(pic)
             if run.xpath(".//a:blip"):
-                hyperlink = self._add_hyperlink(
-                    run, self.anchor, self.tpl.current_rendering_part
-                )
+                hyperlink = self._add_hyperlink(run, self.anchor, self.tpl.current_rendering_part)
                 pic = hyperlink.xml
 
-        return (
-            "</w:t></w:r><w:r><w:drawing>%s</w:drawing></w:r><w:r>"
-            '<w:t xml:space="preserve">' % pic
-        )
+        return '</w:t></w:r><w:r><w:drawing>%s</w:drawing></w:r><w:r><w:t xml:space="preserve">' % pic
 
     def __unicode__(self):
         return self._insert_image()

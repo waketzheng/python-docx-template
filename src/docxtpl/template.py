@@ -39,12 +39,8 @@ if TYPE_CHECKING:
 class DocxTemplate:
     """Class for managing docx files as they were jinja2 templates"""
 
-    HEADER_URI = (
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/header"
-    )
-    FOOTER_URI = (
-        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer"
-    )
+    HEADER_URI = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/header"
+    FOOTER_URI = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer"
 
     def __init__(self, template_file: IO[bytes] | str | PathLike) -> None:
         self.template_file = template_file
@@ -102,9 +98,7 @@ class DocxTemplate:
         # same thing with {% ... %} and {# #}
         # "jinja2 stuff" could a variable, a 'if' etc... anything jinja2 will understand
         def striptags(m) -> str:
-            return re.sub(
-                "</w:t>.*?(<w:t>|<w:t [^>]*>)", "", m.group(0), flags=re.DOTALL
-            )
+            return re.sub("</w:t>.*?(<w:t>|<w:t [^>]*>)", "", m.group(0), flags=re.DOTALL)
 
         src_xml = re.sub(
             r"{%(?:(?!%}).)*|{#(?:(?!#}).)*|{{(?:(?!}}).)*",
@@ -176,28 +170,20 @@ class DocxTemplate:
         # {%- will merge with previous paragraph text
         src_xml = re.sub(r"</w:t>(?:(?!</w:t>).)*?{%-", "{%", src_xml, flags=re.DOTALL)
         # -%} will merge with next paragraph text
-        src_xml = re.sub(
-            r"-%}(?:(?!<w:t[ >]|{%|{{).)*?<w:t[^>]*?>", "%}", src_xml, flags=re.DOTALL
-        )
+        src_xml = re.sub(r"-%}(?:(?!<w:t[ >]|{%|{{).)*?<w:t[^>]*?>", "%}", src_xml, flags=re.DOTALL)
 
         for y in ["tr", "tc", "p", "r"]:
             # replace into xml code the row/paragraph/run containing
             # {%y xxx %} or {{y xxx}} template tag
             # by {% xxx %} or {{ xx }} without any surrounding <w:y> tags :
             # This is mandatory to have jinja2 generating correct xml code
-            pat = (
-                r"<w:%(y)s[ >](?:(?!<w:%(y)s[ >]).)*({%%|{{)%(y)s ([^}%%]*(?:%%}|}})).*?</w:%(y)s>"
-                % {"y": y}
-            )
+            pat = r"<w:%(y)s[ >](?:(?!<w:%(y)s[ >]).)*({%%|{{)%(y)s ([^}%%]*(?:%%}|}})).*?</w:%(y)s>" % {"y": y}
             src_xml = re.sub(pat, r"\1 \2", src_xml, flags=re.DOTALL)
 
         for y in ["tr", "tc", "p"]:
             # same thing, but for {#y xxx #} (but not where y == 'r', since that
             # makes less sense to use comments in that context
-            pat = (
-                r"<w:%(y)s[ >](?:(?!<w:%(y)s[ >]).)*({#)%(y)s ([^}#]*(?:#})).*?</w:%(y)s>"
-                % {"y": y}
-            )
+            pat = r"<w:%(y)s[ >](?:(?!<w:%(y)s[ >]).)*({#)%(y)s ([^}#]*(?:#})).*?</w:%(y)s>" % {"y": y}
             src_xml = re.sub(pat, r"\1 \2", src_xml, flags=re.DOTALL)
 
         # add vMerge
@@ -303,38 +289,27 @@ class DocxTemplate:
 
         return src_xml
 
-    def render_xml_part(
-        self, src_xml: str, part: StoryPart, context: dict[str, Any], jinja_env=None
-    ) -> str:
+    def render_xml_part(self, src_xml: str, part: StoryPart, context: dict[str, Any], jinja_env=None) -> str:
         src_xml = re.sub(r"<w:p([ >])", r"\n<w:p\1", src_xml)
         try:
             self.current_rendering_part = part
-            template = (
-                jinja_env.from_string(src_xml) if jinja_env else Template(src_xml)
-            )
+            template = jinja_env.from_string(src_xml) if jinja_env else Template(src_xml)
             dst_xml = template.render(context)
         except TemplateError as exc:
             if hasattr(exc, "lineno") and exc.lineno is not None:
                 line_number = max(exc.lineno - 4, 0)
                 exc.docx_context = map(  # type:ignore[attr-defined]
                     lambda x: re.sub(r"<[^>]+>", "", x),
-                    src_xml.splitlines()[line_number: (line_number + 7)],  # fmt: skip
+                    src_xml.splitlines()[line_number : (line_number + 7)],  # fmt: skip
                 )
 
             raise exc
         dst_xml = re.sub(r"\n<w:p([ >])", r"<w:p\1", dst_xml)
-        dst_xml = (
-            dst_xml.replace("{_{", "{{")
-            .replace("}_}", "}}")
-            .replace("{_%", "{%")
-            .replace("%_}", "%}")
-        )
+        dst_xml = dst_xml.replace("{_{", "{{").replace("}_}", "}}").replace("{_%", "{%").replace("%_}", "%}")
         dst_xml = self.resolve_listing(dst_xml)
         return dst_xml
 
-    def render_properties(
-        self, context: dict[str, Any], jinja_env: Environment | None = None
-    ) -> None:
+    def render_properties(self, context: dict[str, Any], jinja_env: Environment | None = None) -> None:
         # List of string attributes of docx.opc.coreprops.CoreProperties which are strings.
         # It seems that some attributes cannot be written as strings. Those are commented out.
         properties = [
@@ -359,23 +334,14 @@ class DocxTemplate:
             rendered = template.render(context)
             setattr(self.docx.core_properties, prop, rendered)
 
-    def render_footnotes(
-        self, context: dict[str, Any], jinja_env: Environment | None = None
-    ) -> None:
+    def render_footnotes(self, context: dict[str, Any], jinja_env: Environment | None = None) -> None:
         if jinja_env is None:
             jinja_env = Environment()
 
         for section in self.docx.sections:
             for part in section.part.package.parts:
-                if part.content_type == (
-                    "application/vnd.openxmlformats-officedocument"
-                    ".wordprocessingml.footnotes+xml"
-                ):
-                    xml = self.patch_xml(
-                        part.blob.decode("utf-8")
-                        if isinstance(part.blob, bytes)
-                        else part.blob
-                    )
+                if part.content_type == ("application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml"):
+                    xml = self.patch_xml(part.blob.decode("utf-8") if isinstance(part.blob, bytes) else part.blob)
                     xml = self.render_xml_part(xml, part, context, jinja_env)
                     part._blob = xml.encode("utf-8")
 
@@ -383,23 +349,18 @@ class DocxTemplate:
         def resolve_text(run_properties, paragraph_properties, m) -> str:
             xml = m.group(0).replace(
                 "\t",
-                "</w:t></w:r>"
-                "<w:r>%s<w:tab/></w:r>"
-                '<w:r>%s<w:t xml:space="preserve">' % (run_properties, run_properties),
+                '</w:t></w:r><w:r>%s<w:tab/></w:r><w:r>%s<w:t xml:space="preserve">' % (run_properties, run_properties),
             )
             xml = xml.replace(
                 "\a",
-                "</w:t></w:r></w:p>"
-                '<w:p>%s<w:r>%s<w:t xml:space="preserve">'
-                % (paragraph_properties, run_properties),
+                '</w:t></w:r></w:p><w:p>%s<w:r>%s<w:t xml:space="preserve">' % (paragraph_properties, run_properties),
             )
             xml = xml.replace("\n", '</w:t><w:br/><w:t xml:space="preserve">')
             xml = xml.replace(
                 "\f",
                 "</w:t></w:r></w:p>"
                 '<w:p><w:r><w:br w:type="page"/></w:r></w:p>'
-                '<w:p>%s<w:r>%s<w:t xml:space="preserve">'
-                % (paragraph_properties, run_properties),
+                '<w:p>%s<w:r>%s<w:t xml:space="preserve">' % (paragraph_properties, run_properties),
             )
             return xml
 
@@ -415,9 +376,7 @@ class DocxTemplate:
 
         def resolve_paragraph(m) -> str:
             m_paragraph_properties = re.search(r"<w:pPr>.*?</w:pPr>", m.group(0))
-            paragraph_properties = (
-                m_paragraph_properties.group(0) if m_paragraph_properties else ""
-            )
+            paragraph_properties = m_paragraph_properties.group(0) if m_paragraph_properties else ""
             return re.sub(
                 r"<w:r(?: [^>]*)?>.*?</w:r>",
                 lambda x: resolve_run(paragraph_properties, x),
@@ -425,9 +384,7 @@ class DocxTemplate:
                 flags=re.DOTALL,
             )
 
-        xml = re.sub(
-            r"<w:p(?: [^>]*)?>.*?</w:p>", resolve_paragraph, xml, flags=re.DOTALL
-        )
+        xml = re.sub(r"<w:p(?: [^>]*)?>.*?</w:p>", resolve_paragraph, xml, flags=re.DOTALL)
 
         return xml
 
@@ -456,9 +413,7 @@ class DocxTemplate:
             return m.group(1)
         return "utf-8"
 
-    def build_headers_footers_xml(
-        self, context, uri, jinja_env=None
-    ) -> Generator[tuple[str, bytes]]:
+    def build_headers_footers_xml(self, context, uri, jinja_env=None) -> Generator[tuple[str, bytes]]:
         for relKey, part in self.get_headers_footers(uri):
             xml = self.get_part_xml(part)
             encoding = self.get_headers_footers_encoding(xml)
@@ -558,9 +513,7 @@ class DocxTemplate:
                             c.set(ns_w, str(int(float(w) * new_average / old_average)))
                     # add new columns
                     for i in range(to_add):
-                        etree.SubElement(
-                            tblGrid, ns + "gridCol", {ns_w: str(int(new_average))}
-                        )
+                        etree.SubElement(tblGrid, ns + "gridCol", {ns_w: str(int(new_average))})
 
             # Refetch columns after columns addition.
             columns = tblGrid.findall(ns + "gridCol")
@@ -775,15 +728,9 @@ class DocxTemplate:
                         buf = zin.read(item.filename)
                         if item.filename in self.zipname_to_replace:
                             zout.writestr(item, self.zipname_to_replace[item.filename])
-                        elif (
-                            item.filename.startswith("word/media/")
-                            and item.CRC in self.crc_to_new_media
-                        ):
+                        elif item.filename.startswith("word/media/") and item.CRC in self.crc_to_new_media:
                             zout.writestr(item, self.crc_to_new_media[item.CRC])
-                        elif (
-                            item.filename.startswith("word/embeddings/")
-                            and item.CRC in self.crc_to_new_embedded
-                        ):
+                        elif item.filename.startswith("word/embeddings/") and item.CRC in self.crc_to_new_embedded:
                             zout.writestr(item, self.crc_to_new_embedded[item.CRC])
                         else:
                             zout.writestr(item, buf)
@@ -815,9 +762,7 @@ class DocxTemplate:
             # make sure all template images defined by user were replaced
             for img_id, replaced in replaced_pics.items():
                 if not replaced:
-                    raise ValueError(
-                        "Picture %s not found in the docx template" % img_id
-                    )
+                    raise ValueError("Picture %s not found in the docx template" % img_id)
 
     def get_pic_map(self) -> dict:
         return self.pic_map
