@@ -31,9 +31,11 @@ docs = ["Sphinx", "sphinxcontrib-napoleon"]
 
 [dependency-groups]
 dev = [
+    "sphinx-book-theme",
+    "ruff; python_version >= '3.9'",
+    "twine; python_version >= '3.9'",
     "mypy >=1.17.0; python_version >= '3.9'",
     "lxml-stubs >=0.5.1; python_version >= '3.9'",
-    "flake8 >=7.3.0; python_version >= '3.9'"
 ]
 
 [project.urls]
@@ -42,13 +44,13 @@ repository = "https://github.com/elapouya/python-docx-template.git"
 document = "https://docxtpl.readthedocs.org"
 
 [tool.pdm]
-version = {source="file", path="docxtpl/__init__.py"}
+version = {source="file", path="src/docxtpl/__init__.py"}
 
 [tool.poetry]
 version = '0.0.0'
 
 [tool.poetry-plugin-version]
-source = "docxtpl/__init__.py"
+source = "src/docxtpl/__init__.py"
 
 [tool.mypy]
 pretty = true
@@ -65,7 +67,19 @@ ignore_missing_imports = true
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
+[tool.ruff]
+line-length = 127
+
+[tool.ruff.lint]
+extend-select = [
+    "I",      # https://docs.astral.sh/ruff/rules/#isort-i
+]
+
 [tool.pdm.scripts]
-style = "flake8 . --count --max-line-length=127 --show-source --statistics --exclude .venv,__pycache__"
-type = "mypy ."
-check = {composite = ["style", "type {args}"]}
+tree = "pdm list --tree"
+style = {composite = ["ruff format", "ruff check --fix {args}"]}
+typehints = {composite = ["mypy .", "uv build", "twine check dist/*"]}
+check = {composite = ["ruff format --check", "ruff check", "typehints"]}
+lint = {composite = ["style", "typehints"]}
+test = "python tests/runtests.py"
+ci = {composite = ["check", "test"]}
