@@ -5,7 +5,6 @@ Created : 2015-03-12
 """
 
 import jinja2
-
 from docxtpl import DocxTemplate
 
 jinja_env = jinja2.Environment()

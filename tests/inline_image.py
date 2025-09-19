@@ -8,7 +8,6 @@ import jinja2
 
 # for height and width you have to use millimeters (Mm), inches or points(Pt) class :
 from docx.shared import Mm
-
 from docxtpl import DocxTemplate, InlineImage
 
 tpl = DocxTemplate("templates/inline_image_tpl.docx")

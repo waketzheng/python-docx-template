@@ -1,3 +1,7 @@
+0.20.2 (Unreleased)
+-------------------
+- Migrate from black+flake8 to ruff
+
 0.20.1 (2025-07-15)
 -------------------
 - Fix and improve get_undeclared_template_variables() method (Thanks to Pablo Esteban)

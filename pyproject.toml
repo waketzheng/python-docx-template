@@ -36,13 +36,13 @@ repository = "https://github.com/elapouya/python-docx-template.git"
 document = "https://docxtpl.readthedocs.org"
 
 [tool.pdm]
-version = {source="file", path="src/docxtpl/__init__.py"}
+version = {source="file", path="docxtpl/__init__.py"}
 
 [tool.poetry]
 version = '0.0.0'
 
 [tool.poetry-plugin-version]
-source = "src/docxtpl/__init__.py"
+source = "docxtpl/__init__.py"
 
 [tool.ruff]
 line-length = 127
@@ -57,6 +57,9 @@ extend-select = [
     "FA",     # https://docs.astral.sh/ruff/rules/#flake8-future-annotations-fa
     "RUF100", # https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
 ]
+
+[tool.ruff.lint.isort]
+known-third-party = ["docxtpl"]
 
 [tool.mypy]
 pretty = true

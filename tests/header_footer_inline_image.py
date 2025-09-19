@@ -6,7 +6,6 @@ Created : 2021-04-06
 
 # for height and width you have to use millimeters (Mm), inches or points(Pt) class :
 from docx.shared import Mm
-
 from docxtpl import DocxTemplate, InlineImage
 
 tpl = DocxTemplate("templates/header_footer_inline_image_tpl.docx")

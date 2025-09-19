@@ -7,7 +7,7 @@ name = "pypi"
 
 [dev-packages]
 docxtpl = {editable = true, path = "."}
-flake8 = "*"
+ruff = "*"
 
 [requires]
 python_version = "3"
